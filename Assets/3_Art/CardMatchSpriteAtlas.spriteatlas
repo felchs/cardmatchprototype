@@ -81,6 +81,7 @@ SpriteAtlas:
     - {fileID: 2800000, guid: 961cbc55a5b82004997395df6d7b1bd7, type: 3}
     - {fileID: 2800000, guid: ddbfb3b00cc6a4444ac9399df285725f, type: 3}
     - {fileID: 2800000, guid: f1e3ccee4e2b0364f93d748b96f1b293, type: 3}
+    - {fileID: 2800000, guid: 82428a9c21217774282bac3780663139, type: 3}
     bindAsDefault: 1
     isAtlasV2: 0
     cachedData: {fileID: 0}
@@ -117,6 +118,7 @@ SpriteAtlas:
   - {fileID: 21300000, guid: ef15c6fa648a1a049a9740935c118d3b, type: 3}
   - {fileID: 21300000, guid: e5e5baeb3759cd84eb2f83403a978197, type: 3}
   - {fileID: 21300000, guid: 9262812c048711a4ba6358b75f9f22c1, type: 3}
+  - {fileID: 21300000, guid: 82428a9c21217774282bac3780663139, type: 3}
   - {fileID: 21300000, guid: 2ab176dc82b465f4c8902ebc3e8253a7, type: 3}
   - {fileID: 21300000, guid: 3778b02e44894b641abef4edfeba6c94, type: 3}
   - {fileID: 21300000, guid: 5d21fa4e3b6b8374d98c87f5ada03de9, type: 3}
@@ -155,6 +157,7 @@ SpriteAtlas:
   - _17_Wario
   - _27_BabyPeach
   - _2_Toad
+  - _Back
   - _33_Princess
   - _13_Walouigi
   - _15_Carnivo

@@ -2,15 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameScore : MonoBehaviour
+public class GameScore
 {
-    // Start is called before the first frame update
+    public void UpdateScore(string name)
+    {
+
+    }
+
     void Start()
     {
         
     }
 
-    // Update is called once per frame
     void Update()
     {
         
