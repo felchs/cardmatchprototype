@@ -9,12 +9,15 @@ namespace CardMatch
     public class GameManager : MonoBehaviour
     {
         [SerializeField]
-        GameCard originalCardPrefab;
+        GameObject originalCardPrefab;
+
+        [SerializeField]
+        Canvas canvas;
 
         [SerializeField]
         SaveState saveState;
 
-        private int numCardsW = 3;
+        private int numCardsW = 4;
 
         private int numCardsH = 3;
 
@@ -33,9 +36,11 @@ namespace CardMatch
 
         private Dictionary<string, CardPair> cardPairMap = new Dictionary<string, CardPair>();
 
+        private ArrayList cardPairPositions = new ArrayList();
+
         private GameCard CreateNewGameCard(string cardName)
         {
-            GameObject gameObject = (GameObject)PrefabUtility.InstantiatePrefab(originalCardPrefab);
+            GameObject gameObject = Instantiate(originalCardPrefab, canvas.transform);
             gameObject.name = cardName;
 
             GameCard gameCard = gameObject.GetComponent<GameCard>();
@@ -43,46 +48,73 @@ namespace CardMatch
             return gameCard;
         }
 
-        public static void Shuffle(Array array)
+        private void UpdateLayout(bool shuffle = false)
         {
-            System.Random rng = new System.Random();
-            int n = array.Length;
-            for (int i = n - 1; i > 0; i--)
-            {
-                // Randomly pick an index between 0 and i
-                int j = rng.Next(0, i + 1);
+            float xOffset = (float)(Screen.width / (numCardsW + 1.0));
+            float yOffset = (float)(Screen.height / (numCardsH + 1.0));
 
-                // Swap elements array[i] and array[j]
-                object temp = array.GetValue(i);
-                array.SetValue(array.GetValue(j), i);
-                array.SetValue(temp, j);
-            }
-        }
-
-        private void MountLayout()
-        {
-            Array cardNamesArray = Enum.GetValues(typeof(CardName));
-            Shuffle(cardNamesArray);
-
-            int cardNameIdx = 0;
             for (int i = 0; i < numCardsW; i++)
             {
                 for (int j = 0; j < numCardsH; j++)
                 {
-                    string cardNameToUse = cardNamesArray.GetValue(cardNameIdx++).ToString();
-                    GameCard cardA = CreateNewGameCard(cardNameToUse);
-                    GameCard cardB = CreateNewGameCard(cardNameToUse);
-                    CardPair cardPair = new CardPair(cardA, cardB);
-                    cardPairMap.Add(cardNameToUse, cardPair);
+                    //int idx = i * numCardsW + j;
+                    float xPos = i * xOffset + xOffset;
+                    float yPos = j * yOffset + yOffset;
+                    Vector2 vec = new Vector2(xPos, yPos);
+                    cardPairPositions.Add(vec);
                 }
             }
+
+            if (shuffle)
+            {
+                Utils.Shuffle(cardPairPositions);
+            }
+
+            int idx = 0;
+            foreach (KeyValuePair<string, CardPair> entry in cardPairMap)
+            {
+                // Access the key (string) and value (CardPair) from the entry
+                string key = entry.Key;
+                CardPair cardPair = entry.Value;
+
+                Vector2 posA = (Vector2)cardPairPositions[idx++];
+                cardPair.cardA.gameObject.transform.position = posA;
+
+                Vector2 posB = (Vector2)cardPairPositions[idx++];
+                cardPair.cardB.gameObject.transform.position = posB;
+            }
+        }
+
+        private void CreateCards()
+        {
+            if ((numCardsW * numCardsH) % 2 != 0)
+            {
+                Debug.LogError("You should number of cards in pairs, but you have: " + (numCardsW * numCardsH) + ", number of cards");
+            }
+
+            Array cardNamesArray = Enum.GetValues(typeof(CardName));
+            Utils.Shuffle(cardNamesArray);
+
+            int cardNameIdx = 0;
+            int totalCardsBy2 = (numCardsW * numCardsH) / 2; //  by 2 because I make a pair
+            for (int i = 0; i < totalCardsBy2; i++)
+            {
+                string cardNameToUse = cardNamesArray.GetValue(cardNameIdx++).ToString();
+                GameCard cardA = CreateNewGameCard(cardNameToUse);
+                GameCard cardB = CreateNewGameCard(cardNameToUse);
+                CardPair cardPair = new CardPair(cardA, cardB);
+                cardPairMap.Add(cardNameToUse, cardPair);
+            }
+
+            UpdateLayout(true); // only shuffle on creation
         }
 
         void Start()
         {
-            MountLayout();
-        }
+            CreateCards();
 
+            UpdateLayout();
+        }
 
         void Update()
         {
