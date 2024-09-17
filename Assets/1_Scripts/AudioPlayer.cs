@@ -4,17 +4,52 @@ using UnityEngine;
 
 namespace CardMatch
 {
-    public enum AudioEventEnum
+    public class AudioPlayer : MonoBehaviour
     {
-        FLIP_CARD
+        public List<AudioClip> audioClipList;
+
+        [SerializeField]
+        private AudioSource audioSourceMusic;
+
+        [SerializeField]
+        private AudioSource audioSourceEffect;
+
+        void Start()
+        {
+        }
+
+        public void PlayMusic()
+        {
+            audioSourceMusic.Play();
+        }
+
+        public void StopMusic()
+        {
+            audioSourceMusic.Stop();
+        }
+
+        private AudioClip GetAudioClip(string name)
+        {
+            foreach (AudioClip a in audioClipList)
+            {
+                if (a.name == name)
+                {
+                    return a;
+                }
+            }
+
+            return null;
+        }
+
+        public void PlayEffect(string name)
+        {
+            audioSourceEffect.clip = GetAudioClip(name);
+            audioSourceEffect.Play();
+        }
+
+        public void StopEffect()
+        {
+            audioSourceEffect.Stop();
+        }
     }
-
-    public abstract class AudioPlayer : MonoBehaviour
-    {
-        public abstract void PlayAudio(AudioEventEnum audioEvent, float delayInSeconds);
-
-        public abstract void PlayAudio(AudioEventEnum audioEvent, GameObject source, float delayInSeconds);
-
-    }
-
 }

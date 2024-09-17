@@ -42,13 +42,13 @@ namespace CardMatch
         GameObject canvas;
 
         [SerializeField]
-        SaveState saveState;
-
-        [SerializeField]
         TMP_Text gameType;
 
         [SerializeField]
         private GameScore gameScore;
+
+        [SerializeField]
+        private AudioPlayer audioPlayer;
 
         private GameStateEnum gameState;
 
@@ -217,6 +217,7 @@ namespace CardMatch
         {
             if (gameState == GameStateEnum.FLIPPING_BACK)
             {
+                audioPlayer.PlayEffect("wrong");
                 cardSelection.Remove(gameCard);
                 gameCard.CanFlipCard = true;
 
@@ -228,6 +229,8 @@ namespace CardMatch
 
                 return;
             }
+
+            audioPlayer.PlayEffect("flip");
 
             cardSelection.Add(gameCard);
 
@@ -244,6 +247,7 @@ namespace CardMatch
                 if (card0.spriteName == card1.spriteName)
                 {
                     // do graphic effect
+                    audioPlayer.PlayEffect("flipright");
                     card0.DoEffectSelection();
                     card1.DoEffectSelection();
 
@@ -261,6 +265,7 @@ namespace CardMatch
 
                     if (++pairMatched == GetTotalPairs())
                     {
+                        audioPlayer.StopMusic();
                         OnGameStateChange?.Invoke(GameStateEnum.GAME_FINISHED);
                     }
                 }
@@ -280,7 +285,7 @@ namespace CardMatch
 
             if (gameState == GameStateEnum.GAME_FINISHED)
             {
-                Debug.Log("GAME FINISHED!");
+                audioPlayer.PlayEffect("letsgo");
 
                 gameScore.UpdateScore(GetGameType(), playerName.text, stopwatch.timerText.text.Replace("Time:", ""));
                 stopwatch.StopTimer();
@@ -290,8 +295,6 @@ namespace CardMatch
             }
             else if (gameState == GameStateEnum.RESTART)
             {
-
-                Debug.Log("GAME RESTART!");
                 gameScore.UpdateScore(GetGameType(), playerName.text, stopwatch.timerText.text.Replace("Time:", ""));
 
                 stopwatch.ResetTimer();
@@ -339,15 +342,18 @@ namespace CardMatch
 
         public void OnPanelStartClick()
         {
+            audioPlayer.PlayMusic();
+
             DisableAllPanels();
 
             string[] val = gameType.text.Split("x");
             this.numCardsW = Int32.Parse(val[0]);
             this.numCardsH = Int32.Parse(val[1]);
 
-            if (GetTotalPairs() % 2 != 0)
+            if ((numCardsW * numCardsH) % 2 != 0)
             {
                 // should never came here
+                Debug.LogError("You should number of cards in pairs, but you have: " + (numCardsW * numCardsH) + ", number of cards");
                 return;
             }
 
@@ -371,6 +377,7 @@ namespace CardMatch
         public void OnScorePanelClick()
         {
             scorenPanel.SetActive(true);
+            scorenPanel.GetComponent<GameScore>().initialize();
         }
     }
 }
