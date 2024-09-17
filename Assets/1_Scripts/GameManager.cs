@@ -20,7 +20,8 @@ namespace CardMatch
 
     public class GameManager : MonoBehaviour
     {
-        private string playerName;
+        [SerializeField]
+        TMP_Text playerName;
 
         [SerializeField]
         TMP_Text textNumMatches;
@@ -44,7 +45,10 @@ namespace CardMatch
         SaveState saveState;
 
         [SerializeField]
-        private GameScore gameScore = new GameScore();
+        TMP_Text gameType;
+
+        [SerializeField]
+        private GameScore gameScore;
 
         private GameStateEnum gameState;
 
@@ -52,9 +56,9 @@ namespace CardMatch
 
         private ArrayList cardSelection = new ArrayList();
 
-        private int numCardsW = 6;
+        private int numCardsW = 0;
 
-        private int numCardsH = 2;
+        private int numCardsH = 0;
 
         private int pairMatched;
 
@@ -82,6 +86,11 @@ namespace CardMatch
         private int GetTotalPairs()
         {
             return (numCardsW * numCardsH) / 2;
+        }
+
+        public string GetGameType()
+        {
+            return numCardsH + "x" + numCardsH;
         }
 
         public GameCard GetGameCard(string spriteName, string id)
@@ -162,7 +171,7 @@ namespace CardMatch
 
             UpdateLayout(true); // only shuffle on creation
 
-            textNumMatches.text = string.Format("Num Matches: {0}/{1} ", pairMatched, GetTotalPairs());
+            textNumMatches.text = string.Format("Num Matches: {0}/{1} ", 0, GetTotalPairs());
         }
 
         void EnableAllClicks(bool enable = true)
@@ -181,7 +190,7 @@ namespace CardMatch
 
             pairMatched = 0;
             
-            textNumMatches.text = string.Format("Num Matches: {0}/{1} ", pairMatched, GetTotalPairs());
+            textNumMatches.text = string.Format("Num Matches: {0}/{1} ", 0, GetTotalPairs());
 
             cardSelection.Clear();
 
@@ -240,7 +249,7 @@ namespace CardMatch
 
                     EnableAllClicks(true);
 
-                    textNumMatches.text = string.Format("Num Matches: {0}/{1} ", pairMatched, GetTotalPairs());
+                    textNumMatches.text = string.Format("Num Matches: {0}/{1} ", (pairMatched + 1), GetTotalPairs());
 
                     if (++pairMatched == GetTotalPairs())
                     {
@@ -266,7 +275,13 @@ namespace CardMatch
                 stopwatch.StopTimer();
 
                 Debug.Log("GAME FINISHED!");
-                StartCoroutine(ResetAll());
+
+                gameScore.UpdateScore(GetGameType(), playerName.text, stopwatch.timerText.text.Replace("Time:", ""));
+
+                DisableAllPanels();
+                this.winPanel.SetActive(true);
+
+                //StartCoroutine(ResetAll());
             }
             else if (gameState == GameStateEnum.RESTART)
             {
@@ -274,7 +289,7 @@ namespace CardMatch
 
                 Debug.Log("GAME RESTART!");
 
-                gameScore.UpdateScore(playerName);
+                gameScore.UpdateScore(GetGameType(), playerName.text, stopwatch.timerText.text.Replace("Time:", ""));
             }
         }
 
@@ -319,6 +334,16 @@ namespace CardMatch
 
         public void OnPanelStartClick()
         {
+            string[] val = gameType.text.Split("x");
+            this.numCardsW = Int32.Parse(val[0]);
+            this.numCardsH = Int32.Parse(val[1]);
+
+            if (GetTotalPairs() % 2 != 0)
+            {
+                // should never came here
+                return;
+            }
+
             stopwatch.StartTimer();
 
             startPanel.SetActive(false);
