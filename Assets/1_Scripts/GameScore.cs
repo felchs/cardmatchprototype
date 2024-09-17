@@ -11,6 +11,9 @@ public class GameScore : MonoBehaviour
     private TMP_Text gameType;
 
     [SerializeField]
+    private TMP_Text noScores;
+
+    [SerializeField]
     public List<TMP_Text> positions;
 
     [SerializeField]
@@ -25,7 +28,7 @@ public class GameScore : MonoBehaviour
 
         public string time;
 
-        internal static bool isGreater(string time1, string time2)
+        internal static bool isMinor(string time1, string time2)
         {
             if (time1 == null)
             {
@@ -36,7 +39,7 @@ public class GameScore : MonoBehaviour
             time2 = time2.Replace(":", "");
             int t1 = Int32.Parse(time1);
             int t2 = Int32.Parse(time2);
-            return t1 > t2;
+            return t1 < t2;
         }
     }
 
@@ -69,7 +72,8 @@ public class GameScore : MonoBehaviour
             nameTypeMap.Add(name, nameType);
         }
 
-        nameType.time = NameTime.isGreater(nameType.time, time) ? nameType.time : time;
+        nameType.time = NameTime.isMinor(nameType.time, time) ? nameType.time : time;
+        nameType.name = name;
 
         UpdateUI();
     }
@@ -79,21 +83,40 @@ public class GameScore : MonoBehaviour
         if (!nameTimeByBoardType.ContainsKey(gameType.text))
         {
             ClearNameTimesPos();
-            positions[0].text = "No scores were recorded yet";
+            noScores.enabled = true;
         }
         else
         {
+            noScores.enabled = false;
+
             Dictionary<string, NameTime> dic = nameTimeByBoardType[gameType.text];
             List<NameTime> list = dic.Values.ToList();
-            list.Sort((x, y) => x.time.CompareTo(y.time));
+            list.Sort((x, y) => NameTime.isMinor(x.time, y.time) ? -1 : 1);
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 6; i++)
             {
+                positions[i].enabled = false;
+                names[i].enabled = false;
+                times[i].enabled = false;
+            }
+
+            for (int i = 0; i < 5 && i < list.Count; i++)
+            {
+                if (i == 0)
+                {
+                    positions[i].enabled = true;
+                    names[i].enabled = true;
+                    times[i].enabled = true;
+                }
+
                 NameTime nt = list[i];
 
-                positions[i].text = (i + 1).ToString();
-                names[i].text = nt.name;
-                times[i].text = nt.time;
+                positions[i + 1].text = (i + 1).ToString();
+                names[i + 1].text = nt.name;
+                times[i + 1].text = nt.time;
+                positions[i + 1].enabled = true;
+                names[i + 1].enabled = true;
+                times[i + 1].enabled = true;
             }
         }
     }

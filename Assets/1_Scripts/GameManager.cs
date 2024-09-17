@@ -90,7 +90,7 @@ namespace CardMatch
 
         public string GetGameType()
         {
-            return numCardsH + "x" + numCardsH;
+            return numCardsW + "x" + numCardsH;
         }
 
         public GameCard GetGameCard(string spriteName, string id)
@@ -184,9 +184,18 @@ namespace CardMatch
             }
         }
 
-        IEnumerator ResetAll()
+        void ResetAll()
         {
-            yield return new WaitForSeconds(2);
+            foreach (KeyValuePair<string, CardPair> entry in cardPairMap)
+            {
+                CardPair cardPair = entry.Value;
+                Destroy(cardPair.cardA.gameObject);
+                Destroy(cardPair.cardB.gameObject);
+            }
+
+            cardPairMap.Clear();
+
+            cardPairPositions.Clear();
 
             pairMatched = 0;
             
@@ -194,7 +203,6 @@ namespace CardMatch
 
             cardSelection.Clear();
 
-            yield return new WaitForSeconds(2);
 
             foreach (KeyValuePair<string, CardPair> entry in cardPairMap)
             {
@@ -272,24 +280,21 @@ namespace CardMatch
 
             if (gameState == GameStateEnum.GAME_FINISHED)
             {
-                stopwatch.StopTimer();
-
                 Debug.Log("GAME FINISHED!");
 
                 gameScore.UpdateScore(GetGameType(), playerName.text, stopwatch.timerText.text.Replace("Time:", ""));
+                stopwatch.StopTimer();
 
                 DisableAllPanels();
                 this.winPanel.SetActive(true);
-
-                //StartCoroutine(ResetAll());
             }
             else if (gameState == GameStateEnum.RESTART)
             {
-                stopwatch.ResetTimer();
 
                 Debug.Log("GAME RESTART!");
-
                 gameScore.UpdateScore(GetGameType(), playerName.text, stopwatch.timerText.text.Replace("Time:", ""));
+
+                stopwatch.ResetTimer();
             }
         }
 
@@ -329,11 +334,13 @@ namespace CardMatch
         {
             startPanel.SetActive(false);
             winPanel.SetActive(false);
-            startPanel.SetActive(false);
+            scorenPanel.SetActive(false);
         }
 
         public void OnPanelStartClick()
         {
+            DisableAllPanels();
+
             string[] val = gameType.text.Split("x");
             this.numCardsW = Int32.Parse(val[0]);
             this.numCardsH = Int32.Parse(val[1]);
@@ -344,13 +351,21 @@ namespace CardMatch
                 return;
             }
 
+            stopwatch.ResetTimer();
             stopwatch.StartTimer();
 
-            startPanel.SetActive(false);
+            ResetAll();
 
             CreateCards();
 
             UpdateLayout();
+        }
+
+        public void OnPanelChangeClick()
+        {
+            DisableAllPanels();
+
+            startPanel.SetActive(true);
         }
 
         public void OnScorePanelClick()
