@@ -10,8 +10,8 @@ namespace CardMatch
     enum GameStateEnum
     {
         NOT_INITIALIZED,
-        SELECTING_FIRST,
-        SELECTING_SECOND,
+        PLAYING_SELECTING,
+        FLIPPING_BACK,
         GAME_FINISHED,
         RESTART
     }
@@ -38,7 +38,7 @@ namespace CardMatch
 
         private ArrayList cardSelection = new ArrayList();
 
-        private int numCardsW = 2;
+        private int numCardsW = 6;
 
         private int numCardsH = 2;
 
@@ -81,7 +81,7 @@ namespace CardMatch
 
             GameCard gameCard = gameObject.GetComponent<GameCard>();
             gameCard.CardId = cardId;
-            gameCard.ChangeSprite(cardSpriteName);
+            StartCoroutine(gameCard.ChangeSprite(cardSpriteName, 0));
             return gameCard;
         }
 
@@ -151,7 +151,6 @@ namespace CardMatch
         {
             foreach (KeyValuePair<string, CardPair> entry in cardPairMap)
             {
-                string key = entry.Key;
                 CardPair cardPair = entry.Value;
                 cardPair.cardA.CanFlipCard = enable;
                 cardPair.cardB.CanFlipCard = enable;
@@ -171,39 +170,67 @@ namespace CardMatch
             {
                 string key = entry.Key;
                 CardPair cardPair = entry.Value;
-                cardPair.cardA.ChangeBackSprite();
-                cardPair.cardB.ChangeBackSprite();
+                StartCoroutine(cardPair.cardA.ChangeBackSprite(0));
+                StartCoroutine(cardPair.cardB.ChangeBackSprite(0));
             }
         }
 
-        void OnFlipCardEvent(GameCard GameCard)
+        void OnFlipCardEvent(GameCard gameCard)
         {
-            cardSelection.Add(GameCard);
+            if (gameState == GameStateEnum.FLIPPING_BACK)
+            {
+                cardSelection.Remove(gameCard);
+                gameCard.CanFlipCard = true;
+
+                if (cardSelection.Count == 0)
+                {
+                    EnableAllClicks(true);
+                    OnGameStateChange?.Invoke(GameStateEnum.PLAYING_SELECTING);
+                }
+
+                return;
+            }
+
+            cardSelection.Add(gameCard);
+
+            gameCard.CanFlipCard = false;
 
             // flip both cards if they are equal
             if (cardSelection.Count == 2)
             {
+                EnableAllClicks(false);
+
                 GameCard card0 = (GameCard)cardSelection[0];
                 GameCard card1 = (GameCard)cardSelection[1];
 
-                if (card0.name == card1.name)
+                if (card0.spriteName == card1.spriteName)
                 {
+                    // do graphic effect
                     card0.DoEffectSelection();
                     card1.DoEffectSelection();
 
+                    // do lock forever
+                    card0.Locked = true;
+                    card1.Locked = true;
+
+                    // remove from selection
+                    cardSelection.Remove(card0);
+                    cardSelection.Remove(card1);
+
+                    EnableAllClicks(true);
+
                     if (++pairMatched == GetTotalPairs())
                     {
-                        OnGameStateChange.Invoke(GameStateEnum.GAME_FINISHED);
+                        OnGameStateChange?.Invoke(GameStateEnum.GAME_FINISHED);
                     }
                 }
                 else
                 {
-                    // flip back again both cards
-                    card0.ChangeBackSprite();
-                    card1.ChangeBackSprite();
-                }
+                    OnGameStateChange?.Invoke(GameStateEnum.FLIPPING_BACK);
 
-                cardSelection.Clear();
+                    StartCoroutine(card0.ForceReverseFlipCard(2));
+                    StartCoroutine(card1.ForceReverseFlipCard(2));
+                }
             }
         }
 
@@ -226,12 +253,17 @@ namespace CardMatch
 
         private void Awake()
         {
-            OnGameStateChange?.Invoke(GameStateEnum.NOT_INITIALIZED);
+            if (OnGameStateChange == null)
+            {
+                OnGameStateChange = new UnityEvent<GameStateEnum>();
+            }
+
+            OnGameStateChange.AddListener(OnGameStateChangeFnc);
         }
 
         void Start()
         {
-            OnGameStateChange?.AddListener(OnGameStateChangeFnc);
+            OnGameStateChange.Invoke(GameStateEnum.NOT_INITIALIZED);
 
             CreateCards();
 

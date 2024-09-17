@@ -57,27 +57,39 @@ namespace CardMatch
         SpriteAtlas atlas;
 
         [SerializeField]
-        string spriteName;
+        public string spriteName;
 
         private float rotateSpeed = 180;
 
         private bool onFlippingCard;
         private float yRotation = 0;
 
+        private bool locked = false;
+        public bool Locked
+        {
+            get { return locked; }
+            set { locked = value; }
+        }
+
         private bool canFlipCard = true;
+        public bool CanFlipCard
+        {
+            get { return canFlipCard; }
+            set { 
+                if (locked)
+                {
+                    return;
+                }
+
+                canFlipCard = value; 
+            }
+        }
 
         private string cardId;
-
         public string CardId
         {
             get { return cardId; }
             set { cardId = value; }
-        }
-
-        public bool CanFlipCard
-        {
-            get { return canFlipCard; }
-            set { canFlipCard = value; }
         }
 
         private bool internalAnimFlip = false;
@@ -92,19 +104,18 @@ namespace CardMatch
             set { open = value; }
         }
 
-        public void ChangeSprite(string spriteName)
+        public IEnumerator ChangeSprite(string spriteName, float delay)
         {
+            yield return new WaitForSeconds(delay);
+
             this.spriteName = spriteName;
             GetComponent<Image>().sprite = atlas.GetSprite(spriteName);
         }
 
-        public void ChangeOriginalSprite()
+        public IEnumerator ChangeBackSprite(int delay)
         {
-            GetComponent<Image>().sprite = atlas.GetSprite(spriteName);
-        }
+            yield return new WaitForSeconds(delay);
 
-        public void ChangeBackSprite()
-        {
             GetComponent<Image>().sprite = atlas.GetSprite(BACKSPRITE);
         }
 
@@ -115,17 +126,30 @@ namespace CardMatch
 
         void Start()
         {
-            ChangeBackSprite();
-            //ChangeSprite(spriteName);
+            StartCoroutine(ChangeBackSprite(0));
         }
 
-        public void DoFlipCard()
+        public void DoFlipCardClickEvent()
         {
-            if (!canFlipCard || onFlippingCard)
+            if (!CanFlipCard || onFlippingCard)
             {
                 return;
             }
 
+            OnFlipCardEvent?.Invoke(this);
+            onFlippingCard = true;
+        }
+
+        public IEnumerator ForceReverseFlipCard(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+
+            if (onFlippingCard)
+            {
+                internalAnimFlip = !internalAnimFlip;
+            }
+
+            OnFlipCardEvent?.Invoke(this);
             onFlippingCard = true;
         }
 
@@ -140,26 +164,24 @@ namespace CardMatch
             int sign = internalAnimFlip ? -1 : 1;
             yRotation += rotateSpeed * Time.deltaTime * sign;
 
-            if (yRotation > 90)
+            if (yRotation > 90 && !internalAnimFlip)
             {
                 // change
                 internalAnimFlip = !internalAnimFlip;
 
                 if (open)
                 {
-                    ChangeBackSprite();
+                    StartCoroutine(ChangeBackSprite(0));
                 }
                 else
                 {
-                    ChangeSprite(spriteName);
+                    StartCoroutine(ChangeSprite(spriteName, 0));
                 }
-
-                OnFlipCardEvent?.Invoke(this);
 
                 open = !open;
             }
 
-            if (yRotation < 0)
+            if (yRotation < 0 && internalAnimFlip)
             {
                 internalAnimFlip = false;
                 yRotation = 0;
