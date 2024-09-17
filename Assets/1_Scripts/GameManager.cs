@@ -21,10 +21,19 @@ namespace CardMatch
         private string playerName;
 
         [SerializeField]
+        GameObject startPanel;
+
+        [SerializeField]
+        GameObject winPanel;
+
+        [SerializeField]
+        GameObject scorenPanel;
+
+        [SerializeField]
         GameObject originalCardPrefab;
 
         [SerializeField]
-        Canvas canvas;
+        GameObject canvas;
 
         [SerializeField]
         SaveState saveState;
@@ -265,14 +274,41 @@ namespace CardMatch
         {
             OnGameStateChange.Invoke(GameStateEnum.NOT_INITIALIZED);
 
+            DisableAllPanels();
+
+            startPanel.SetActive(true);
+
+        }
+
+        void Update()
+        {
+        }
+
+        //
+        // Handling panel stuff
+        // Idealy wouldbe nice to do a separate scripts to handle this but by now it's just a simple test
+        // I'm doing it on the same GameManager.cs class
+        //
+
+        public void DisableAllPanels()
+        {
+            startPanel.SetActive(false);
+            winPanel.SetActive(false);
+            startPanel.SetActive(false);
+        }
+
+        public void OnPanelStartClick()
+        {
+            startPanel.SetActive(false);
+
             CreateCards();
 
             UpdateLayout();
         }
 
-        void Update()
+        public void OnScorePanelClick()
         {
-        
+            scorenPanel.SetActive(true);
         }
     }
 }
