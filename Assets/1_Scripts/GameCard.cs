@@ -10,6 +10,50 @@ namespace CardMatch
 {
     public enum CardName
     {
+        _A,
+        _B,
+        _C,
+        _D,
+        _E,
+        _F,
+        _G,
+        _H,
+        _I,
+        _J,
+        _K,
+        _L,
+        _M,
+        _N,
+        _O,
+        _P,
+        _Q,
+        _R,
+        _S,
+        _T,
+        _U,
+        _V,
+        _X,
+        _W,
+        _Y,
+        _Z
+    }
+
+    public enum CardNumber
+    {
+        _0,
+        _1,
+        _2,
+        _3,
+        _4,
+        _5,
+        _6,
+        _7,
+        _8,
+        _9,
+    }
+
+    public enum CardNameMario
+    {
         _0_Mario,
         _1_Luigi,
         _2_Toad,
@@ -55,6 +99,9 @@ namespace CardMatch
 
         [SerializeField]
         SpriteAtlas atlas;
+
+        [SerializeField]
+        SpriteAtlas atlasPtBR;
 
         [SerializeField]
         public string spriteName;
@@ -109,14 +156,16 @@ namespace CardMatch
             yield return new WaitForSeconds(delay);
 
             this.spriteName = spriteName;
-            GetComponent<Image>().sprite = atlas.GetSprite(spriteName);
+            // GetComponent<Image>().sprite = atlas.GetSprite(spriteName);
+            GetComponent<Image>().sprite = atlasPtBR.GetSprite(spriteName);
         }
 
         public IEnumerator ChangeBackSprite(int delay)
         {
             yield return new WaitForSeconds(delay);
 
-            GetComponent<Image>().sprite = atlas.GetSprite(BACKSPRITE);
+            // GetComponent<Image>().sprite = atlas.GetSprite(BACKSPRITE);
+            GetComponent<Image>().sprite = atlasPtBR.GetSprite(spriteName);
         }
 
         public void DoEffectSelection()
@@ -187,6 +236,11 @@ namespace CardMatch
                 yRotation = 0;
                 onFlippingCard = false;
             }
+        }
+
+        public Vector2 GetSize()
+        {
+            return ((RectTransform)this.gameObject.transform).sizeDelta;
         }
 
         void Update()

@@ -9,7 +9,7 @@ namespace CardMatch
 {
     public class Utils
     {
-        public static void Shuffle(ArrayList arrayList)
+        public static void Shuffle(IList arrayList)
         {
             System.Random rng = new System.Random();
             int n = arrayList.Count;

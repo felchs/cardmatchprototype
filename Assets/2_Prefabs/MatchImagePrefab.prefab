@@ -91,6 +91,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   atlas: {fileID: 4343727234628468602, guid: d186a8a33ebe1a94d887d7da5859b988, type: 2}
+  atlasPtBR: {fileID: 4343727234628468602, guid: c5b15a6096b182149a63b51a94d9159c, type: 2}
   spriteName: _Back
   OnFlipCardEvent:
     m_PersistentCalls:
