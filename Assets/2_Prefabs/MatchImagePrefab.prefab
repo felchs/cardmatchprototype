@@ -37,7 +37,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 551, y: 259.5}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1183288586967094509
@@ -90,8 +90,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29660bb1a8294d64f8a6697dad1a739e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  atlas: {fileID: 4343727234628468602, guid: d186a8a33ebe1a94d887d7da5859b988, type: 2}
-  atlasPtBR: {fileID: 4343727234628468602, guid: c5b15a6096b182149a63b51a94d9159c, type: 2}
+  atlasMario: {fileID: 4343727234628468602, guid: d186a8a33ebe1a94d887d7da5859b988, type: 2}
+  atlasPortuguese: {fileID: 4343727234628468602, guid: c5b15a6096b182149a63b51a94d9159c, type: 2}
   spriteName: _Back
   OnFlipCardEvent:
     m_PersistentCalls:

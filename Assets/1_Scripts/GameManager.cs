@@ -9,6 +9,12 @@ using UnityEngine.UI;
 
 namespace CardMatch
 {
+    public enum GameType
+    {
+        MARIO,
+        PORTUGUESE
+    }
+
     enum GameStateEnum
     {
         NOT_INITIALIZED,
@@ -65,7 +71,7 @@ namespace CardMatch
         GameObject canvas;
 
         [SerializeField]
-        TMP_Text gameType;
+        TMP_Text internalGameType;
 
         [SerializeField]
         private GameScore gameScore;
@@ -93,7 +99,7 @@ namespace CardMatch
 
         //private List<Word> wordList = new List<Word>();
 
-        private bool mario = false;
+        private GameType gameType = GameType.MARIO;
 
         class CardPair
         {
@@ -106,6 +112,11 @@ namespace CardMatch
             // just a container so use as public
             public GameCard cardA;
             public GameCard cardB;
+
+            internal string getName()
+            {
+                return cardA.spriteName + cardB.spriteName;
+            }
         }
 
         private Dictionary<string, CardPair> cardPairMap = new Dictionary<string, CardPair>();
@@ -123,7 +134,7 @@ namespace CardMatch
             return (numCardsW * numCardsH) / 2;
         }
 
-        public string GetGameType()
+        public string GetInternalGameType()
         {
             return numCardsW + "x" + numCardsH;
         }
@@ -133,21 +144,23 @@ namespace CardMatch
             CardPair cardPair = cardPairMap[spriteName];
             return id == "A" ? cardPair.cardA : cardPair.cardB;
         }
-
-        private GameCard CreateNewGameCard(string cardSpriteName, string cardId)
+        
+        private GameCard CreateNewGameCard(string cardSpriteName, string cardId, GameType gameType = GameType.PORTUGUESE)
         {
             GameObject gameObject = Instantiate(originalCardPrefab, canvas.transform);
             gameObject.name = cardSpriteName + "_" + cardId;
 
             GameCard gameCard = gameObject.GetComponent<GameCard>();
             gameCard.CardId = cardId;
+            gameCard.GameType = gameType;
+
             StartCoroutine(gameCard.ChangeSprite(cardSpriteName, 0));
             return gameCard;
         }
 
         private void UpdateLayout(bool shuffle = false)
         {
-            if (!mario)
+            if (gameType == GameType.PORTUGUESE)
             {
                 //
                 // update memory cards
@@ -155,26 +168,30 @@ namespace CardMatch
                 Vector2 sz = currentWord.cardA.GetSize();
 
                 int numHeadCards = 2;
+                float xInitialPos = (float)(-Screen.width * 0.5);
+                float yInitialPos = (float)(-Screen.height * 0.5);
                 float xOffsetHead = (float)(Screen.width / (numHeadCards + 1.0));
                 float yOffsetHead = (float)(Screen.height - (sz.y / 2.0 + 10));
 
-                currentWord.cardA.gameObject.transform.position = new Vector2(xOffsetHead * 1, yOffsetHead);
-                currentWord.cardB.gameObject.transform.position = new Vector2(xOffsetHead * 2, yOffsetHead);
+                currentWord.cardA.gameObject.GetComponent<RectTransform>().localPosition = new Vector2(xInitialPos + xOffsetHead * 1, yInitialPos + yOffsetHead);
+                currentWord.cardB.gameObject.GetComponent<RectTransform>().localPosition = new Vector2(xInitialPos + xOffsetHead * 2, yInitialPos + yOffsetHead);
             }
 
             //
             // update memory cards
             //
             float xOffset = (float)(Screen.width / (numCardsW + 1.0));
-            float yOffset = (float)(Screen.height / (numCardsH + (mario ? 1 : 3.0))); // 3.0 a little space of 3 cards
+            float yOffset = (float)(Screen.height / (numCardsH + (gameType == GameType.MARIO ? 1 : 3.0))); // 3.0 a little space of 3 cards
 
             for (int i = 0; i < numCardsW; i++)
             {
                 for (int j = 0; j < numCardsH; j++)
                 {
                     //int idx = i * numCardsW + j;
-                    float xPos = i * xOffset + xOffset;
-                    float yPos = j * yOffset + yOffset;
+                    float xInitialPos = (float)(-Screen.width * 0.5);
+                    float yInitialPos = (float)(-Screen.height * 0.5);
+                    float xPos = xInitialPos + i * xOffset + xOffset;
+                    float yPos = yInitialPos + j * yOffset + yOffset;
                     Vector2 vec = new Vector2(xPos, yPos);
                     cardPairPositions.Add(vec);
                 }
@@ -193,10 +210,10 @@ namespace CardMatch
                     CardPair cardPair = entry.Value;
 
                     Vector2 posA = (Vector2)cardPairPositions[idx++];
-                    cardPair.cardA.gameObject.transform.position = posA;
+                    cardPair.cardA.gameObject.GetComponent<RectTransform>().localPosition = posA;
 
                     Vector2 posB = (Vector2)cardPairPositions[idx++];
-                    cardPair.cardB.gameObject.transform.position = posB;
+                    cardPair.cardB.gameObject.GetComponent<RectTransform>().localPosition = posB;
                 }
             }
         }
@@ -217,11 +234,11 @@ namespace CardMatch
             for (int i = 0; i < totalPairs - 1; i++)
             {
                 string co = GetRandomString(consonant);
-                GameCard cardA = CreateNewGameCard(co, co);
+                GameCard cardA = CreateNewGameCard(co, co, GameType.PORTUGUESE);
                 cardA.OnFlipCardEvent.AddListener(OnFlipCardEvent);
 
                 string vo = GetRandomString(vowels);
-                GameCard cardB = CreateNewGameCard(vo, vo);
+                GameCard cardB = CreateNewGameCard(vo, vo, GameType.PORTUGUESE);
                 cardB.OnFlipCardEvent.AddListener(OnFlipCardEvent);
 
                 CardPair cardPair = new CardPair(cardA, cardB);
@@ -231,12 +248,20 @@ namespace CardMatch
 
             string randomConsonant = GetRandomString(consonant);
             string randomVowel = GetRandomString(vowels);
-            this.currentWord = new CardPair(CreateNewGameCard(randomConsonant, randomConsonant),
-                                            CreateNewGameCard(randomVowel, randomVowel));
+            GameCard currentA = CreateNewGameCard(randomConsonant, randomConsonant, GameType.PORTUGUESE);
+            currentA.ForceFlipCard();
+            GameCard currentB = CreateNewGameCard(randomVowel, randomVowel, GameType.PORTUGUESE);
+            currentB.ForceFlipCard();
+            this.currentWord = new CardPair(currentA,
+                                            currentB);
+            
 
+            GameCard cardA_ = CreateNewGameCard(randomConsonant, randomConsonant, GameType.PORTUGUESE);
+            cardA_.OnFlipCardEvent.AddListener(OnFlipCardEvent);
+            GameCard cardB_ = CreateNewGameCard(randomVowel, randomVowel, GameType.PORTUGUESE);
+            cardB_.OnFlipCardEvent.AddListener(OnFlipCardEvent);
             string nme = randomConsonant + "_" + randomVowel;
-            cardPairMap.Add(nme, new CardPair(CreateNewGameCard(randomConsonant, randomConsonant),
-                                                            CreateNewGameCard(randomVowel, randomVowel)));
+            cardPairMap.Add(nme, new CardPair(cardA_, cardB_));
         }
 
         private void CreateCardsMario()
@@ -254,9 +279,9 @@ namespace CardMatch
             for (int i = 0; i < totalPairs; i++)
             {
                 string cardNameToUse = cardNamesArray.GetValue(cardNameIdx++).ToString();
-                GameCard cardA = CreateNewGameCard(cardNameToUse, "A");
+                GameCard cardA = CreateNewGameCard(cardNameToUse, "A", GameType.MARIO);
                 cardA.OnFlipCardEvent.AddListener(OnFlipCardEvent);
-                GameCard cardB = CreateNewGameCard(cardNameToUse, "B");
+                GameCard cardB = CreateNewGameCard(cardNameToUse, "B", GameType.MARIO);
                 cardB.OnFlipCardEvent.AddListener(OnFlipCardEvent);
                 CardPair cardPair = new CardPair(cardA, cardB);
                 cardPairMap.Add(cardNameToUse, cardPair);
@@ -286,6 +311,14 @@ namespace CardMatch
                 Destroy(cardPair.cardB.gameObject);
             }
 
+            foreach (KeyValuePair<string, CardPair> entry in cardPairMap)
+            {
+                string key = entry.Key;
+                CardPair cardPair = entry.Value;
+                StartCoroutine(cardPair.cardA.ChangeBackSprite(0));
+                StartCoroutine(cardPair.cardB.ChangeBackSprite(0));
+            }
+
             cardPairMap.Clear();
 
             cardPairPositions.Clear();
@@ -296,12 +329,11 @@ namespace CardMatch
 
             cardSelection.Clear();
 
-            foreach (KeyValuePair<string, CardPair> entry in cardPairMap)
+            if (currentWord != null)
             {
-                string key = entry.Key;
-                CardPair cardPair = entry.Value;
-                StartCoroutine(cardPair.cardA.ChangeBackSprite(0));
-                StartCoroutine(cardPair.cardB.ChangeBackSprite(0));
+                Destroy(currentWord.cardA.gameObject);
+                Destroy(currentWord.cardB.gameObject);
+                currentWord = null;
             }
         }
 
@@ -336,7 +368,8 @@ namespace CardMatch
                 GameCard card0 = (GameCard)cardSelection[0];
                 GameCard card1 = (GameCard)cardSelection[1];
 
-                if (card0.spriteName == card1.spriteName)
+                //if (card0.spriteName == card1.spriteName)
+                if (DoMatchedCards(card0.spriteName, card1.spriteName))
                 {
                     // do graphic effect
                     audioPlayer.PlayEffect("flipright");
@@ -355,7 +388,8 @@ namespace CardMatch
 
                     textNumMatches.text = string.Format("Num Matches: {0}/{1} ", (pairMatched + 1), GetTotalPairs());
 
-                    if (++pairMatched == GetTotalPairs())
+                    if ((gameType == GameType.MARIO && ++pairMatched == GetTotalPairs()) 
+                            || (gameType == GameType.PORTUGUESE && (++pairMatched == 1)))
                     {
                         audioPlayer.StopMusic();
                         OnGameStateChange?.Invoke(GameStateEnum.GAME_FINISHED);
@@ -371,6 +405,22 @@ namespace CardMatch
             }
         }
 
+        private bool DoMatchedCards(string spriteName1, string spriteName2)
+        {
+            if (gameType == GameType.PORTUGUESE)
+            {
+                string word = spriteName1 + spriteName2;
+
+                return word == currentWord.getName();
+            }
+            else if (gameType == GameType.MARIO)
+            {
+                return spriteName1 == spriteName2;
+            }
+
+            return false;
+        }
+
         void OnGameStateChangeFnc(GameStateEnum gameState)
         {
             this.gameState = gameState;
@@ -379,18 +429,34 @@ namespace CardMatch
             {
                 audioPlayer.PlayEffect("letsgo");
 
-                gameScore.UpdateScore(GetGameType(), playerName.text, stopwatch.timerText.text.Replace("Time:", ""));
+                gameScore.UpdateScore(GetInternalGameType(), playerName.text, stopwatch.timerText.text.Replace("Time:", ""));
                 stopwatch.StopTimer();
 
-                DisableAllPanels();
-                this.winPanel.SetActive(true);
+                StartCoroutine(DoFireworks());
             }
             else if (gameState == GameStateEnum.RESTART)
             {
-                gameScore.UpdateScore(GetGameType(), playerName.text, stopwatch.timerText.text.Replace("Time:", ""));
+                gameScore.UpdateScore(GetInternalGameType(), playerName.text, stopwatch.timerText.text.Replace("Time:", ""));
 
                 stopwatch.ResetTimer();
             }
+        }
+
+        private IEnumerator DoFireworks()
+        {
+            yield return new WaitForEndOfFrame();
+
+
+
+            yield return new WaitForSeconds(5);
+
+            EnableWinPanel();
+        }
+
+        private void EnableWinPanel()
+        {
+            DisableAllPanels();
+            this.winPanel.SetActive(true);
         }
 
         private void Awake()
@@ -438,7 +504,7 @@ namespace CardMatch
 
             DisableAllPanels();
 
-            string[] val = gameType.text.Split("x");
+            string[] val = internalGameType.text.Split("x");
             this.numCardsW = Int32.Parse(val[0]);
             this.numCardsH = Int32.Parse(val[1]);
 
@@ -454,7 +520,7 @@ namespace CardMatch
 
             ResetAll();
 
-            if (mario)
+            if (gameType == GameType.MARIO)
             {
                 CreateCardsMario();
             }

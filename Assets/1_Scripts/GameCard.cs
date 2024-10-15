@@ -97,11 +97,13 @@ namespace CardMatch
     {
         private const string BACKSPRITE = "_Back";
 
-        [SerializeField]
-        SpriteAtlas atlas;
+        private SpriteAtlas atlas;
 
         [SerializeField]
-        SpriteAtlas atlasPtBR;
+        SpriteAtlas atlasMario;
+
+        [SerializeField]
+        SpriteAtlas atlasPortuguese;
 
         [SerializeField]
         public string spriteName;
@@ -109,6 +111,11 @@ namespace CardMatch
         private float rotateSpeed = 180;
 
         private bool onFlippingCard;
+        public void ForceFlipCard()
+        {
+            onFlippingCard = true;            
+        }
+
         private float yRotation = 0;
 
         private bool locked = false;
@@ -145,6 +152,13 @@ namespace CardMatch
 
         private bool open = false;
 
+        private GameType gameType;
+        public GameType GameType
+        {
+            get { return gameType; }
+            set { gameType = value; }
+        }
+
         public bool Open
         {
             get { return open; }
@@ -155,17 +169,26 @@ namespace CardMatch
         {
             yield return new WaitForSeconds(delay);
 
+            if (this == null)
+            {
+                yield break;
+            }
+
             this.spriteName = spriteName;
-            // GetComponent<Image>().sprite = atlas.GetSprite(spriteName);
-            GetComponent<Image>().sprite = atlasPtBR.GetSprite(spriteName);
+
+           GetComponent<Image>().sprite = atlas.GetSprite(spriteName);
         }
 
         public IEnumerator ChangeBackSprite(int delay)
         {
             yield return new WaitForSeconds(delay);
 
-            // GetComponent<Image>().sprite = atlas.GetSprite(BACKSPRITE);
-            GetComponent<Image>().sprite = atlasPtBR.GetSprite(spriteName);
+            if (this == null)
+            {
+                yield break;
+            }
+
+            GetComponent<Image>().sprite = atlas.GetSprite(BACKSPRITE);
         }
 
         public void DoEffectSelection()
@@ -175,6 +198,15 @@ namespace CardMatch
 
         void Start()
         {
+            if (GameType == GameType.MARIO)
+            {
+                atlas = atlasMario;
+            }
+            else
+            {
+                atlas = atlasPortuguese;
+            }
+
             StartCoroutine(ChangeBackSprite(0));
         }
 
@@ -202,7 +234,7 @@ namespace CardMatch
             onFlippingCard = true;
         }
 
-        private void FlipCard()
+        private void FlipCardGraphic()
         {
             RectTransform rectTransform = this.gameObject.GetComponent<RectTransform>();
             Vector3 euler = rectTransform.eulerAngles;
@@ -247,7 +279,7 @@ namespace CardMatch
         {
             if (onFlippingCard)
             {
-                FlipCard();
+                FlipCardGraphic();
             }
         }
 
